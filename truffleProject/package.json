@@ -1,14 +1,18 @@
 {
   "name": "TruffleProject",
   "version": "1.0.0",
+  "author": "Ronny Demera",
+  "license": "MIT",
   "scripts": {
     "truffle:init": "truffle init",
-    "truffle:migrate": "truffle migrate --reset",
     "truffle:compile": "truffle compile",
+    "truffle:migrate": "truffle migrate --reset",
+    "truffle:test": "truffle test",
     "ganache": "ganache-cli -p 8545 -i 5777"
   },
   "dependencies": {
     "@openzeppelin/contracts": "3.3.0",
+    "@openzeppelin/test-helpers": "0.5.9",
     "ganache-cli": "6.12.1",
     "truffle": "5.1.53"
   }
