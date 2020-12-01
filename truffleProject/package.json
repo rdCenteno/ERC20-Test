@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "truffle:init": "truffle init",
+    "truffle:migrate": "truffle migrate --reset",
+    "truffle:compile": "truffle compile",
     "ganache": "ganache-cli -p 8545 -i 5777"
   },
   "dependencies": {
