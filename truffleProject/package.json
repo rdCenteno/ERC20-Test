@@ -1,0 +1,12 @@
+{
+  "name": "TruffleProject",
+  "version": "1.0.0",
+  "scripts": {
+    "truffle:init": "truffle init",
+    "ganache": "ganache-cli -p 8545 -i 5777"
+  },
+  "dependencies": {
+    "ganache-cli": "6.12.1",
+    "truffle": "5.1.53"
+  }
+}
