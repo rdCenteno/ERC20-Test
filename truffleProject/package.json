@@ -9,7 +9,7 @@
     "truffle:migrate": "truffle migrate --reset",
     "posttruffle:migrate": "yarn copy:contracts",
     "truffle:test": "truffle test",
-    "ganache": "ganache-cli -p 8545 -i 5777",
+    "ganache": "ganache-cli -p 8545 -i 5777 -a 15",
     "copy:contracts": "shx cp ./build/contracts/MyToken.json ../app/public"
   },
   "dependencies": {

@@ -4,8 +4,6 @@ const { ZERO_ADDRESS } = constants;
 const MyToken = artifacts.require("./MyToken.sol");
 
 
-const INITIAL_BALANCE = 100;
-
 contract("MyToken test", async accounts => {
 
     const [owner, other] = accounts;
