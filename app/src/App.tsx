@@ -8,18 +8,32 @@ import Tx from "ethereumjs-tx";
 const USER_NAME = "USER";
 const MULTIPLIER = 1000000000000000000;
 
+
+interface IProps {
+}
+
+interface IState {
+    users: Map<string, User>;
+    usersId: Array<string>;
+    web3: Web3;
+    contract: any;
+    owner: string;
+    contractAddress: string;
+}
+
 interface User {
     account: any;
     balance: number;
 }
 
-class App extends React.Component<any, any> {
+class App extends React.Component<IProps, IState> {
 
     constructor(props: any) {
         super(props);
         this.state = {
             users: new Map<string, User>(),
             usersId: new Array<string>(),
+            web3: new Web3(),
             contract: "",
             owner: "",
             contractAddress: ""
@@ -43,12 +57,12 @@ class App extends React.Component<any, any> {
                 return web3.eth.getAccounts();
             }).then(accounts => {
                 const owner = accounts[0];
-                this.setState({ contract: contract, owner: owner, contractAddress: contractAddress });
+                this.setState({ contract: contract, owner: owner, contractAddress: contractAddress, web3: web3});
             })
     }
 
     createUser() {
-        const web3 = this.getWeb3();
+        const web3 = this.state.web3;
         let usersId = this.state.usersId;
         let users = this.state.users;
         const userId = usersId.length + 1;
@@ -64,8 +78,8 @@ class App extends React.Component<any, any> {
 
     addBalance(userId: string, balance: number): Promise<void> {
         const contract = this.state.contract;
-        const web3 = this.getWeb3();
-        const userAddress = this.state.users.get(userId).account.address;
+        const web3 = this.state.web3;
+        const userAddress = this.state.users.get(userId)!.account.address;
         return web3.eth.getAccounts().then(accounts => {
             const owner = accounts[0];
             return contract.methods.addBalanceToUser(userAddress, balance).send({ from: owner });
@@ -77,9 +91,9 @@ class App extends React.Component<any, any> {
     }
 
     transfer(sender: string, recipient: string, amount: number) {
-        const web3 = this.getWeb3();
+        const web3 = this.state.web3;
         const contract = this.state.contract;
-        const recipientAddress = this.state.users.get(recipient).account.address;
+        const recipientAddress = this.state.users.get(recipient)!.account.address;
         const weiAmount = web3.utils.toWei(amount.toString(), "ether");
         const encodeAbi = contract.methods.transfer(recipientAddress, weiAmount).encodeABI();
         return this.singTx(sender, encodeAbi)
@@ -95,7 +109,7 @@ class App extends React.Component<any, any> {
 
     updateUserBalance(userId: string): Promise<void> {
         let users = this.state.users;
-        let user = users.get(userId);
+        let user = users.get(userId)!;
         const contract = this.state.contract;
         return contract.methods.balanceOf(user.account.address).call()
             .then((res: string) => {
@@ -113,8 +127,8 @@ class App extends React.Component<any, any> {
     }
 
     singTx(userId: string, encodeAbi: string): Promise<any> {
-        const web3 = this.getWeb3();
-        const user = this.state.users.get(userId).account;
+        const web3 = this.state.web3;
+        const user = this.state.users.get(userId)!.account;
         const contractAddress = this.state.contractAddress;
         return web3.eth.getTransactionCount(user.address, "pending")
             .then(nonceValue => {
@@ -163,7 +177,7 @@ class App extends React.Component<any, any> {
                         <React.Fragment>
                             <ul>
                                 {users.map((userName: string) => {
-                                    return <li key={userName}> {userName}: {usersData.get(userName).balance} </li>
+                                    return <li key={userName}> {userName}: {usersData.get(userName)!.balance} </li>
                                 })}
                             </ul>
                         </React.Fragment>
