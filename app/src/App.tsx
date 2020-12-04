@@ -57,7 +57,7 @@ class App extends React.Component<IProps, IState> {
                 return web3.eth.getAccounts();
             }).then(accounts => {
                 const owner = accounts[0];
-                this.setState({ contract: contract, owner: owner, contractAddress: contractAddress, web3: web3});
+                this.setState({ contract: contract, owner: owner, contractAddress: contractAddress, web3: web3 });
             })
     }
 
@@ -161,18 +161,22 @@ class App extends React.Component<IProps, IState> {
     render() {
         const users = this.state.usersId;
         const usersData = this.state.users;
-        const showList = users.length > 0;
+        const numberOfUsers = users.length;
 
         return (
             <div className="app-container">
 
                 <div className="main-container">
 
+                    {numberOfUsers < 10 &&
                     <div className="button-container">
                         <button className="btn" onClick={this.createUser}>CREATE NEW USER</button>
                     </div>
+                    }
 
-                    {showList && <div className="list-container">
+
+                    {numberOfUsers > 0 &&
+                    <div className="list-container">
                         <h2>List of Users: </h2>
                         <React.Fragment>
                             <ul>
