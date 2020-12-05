@@ -20,6 +20,10 @@ interface IState {
     contractAddress: string;
     userSelected: string;
     balance: number;
+    isTranferAvailable: boolean,
+    sender: string,
+    recipient: string,
+    amount: number
 }
 
 interface User {
@@ -39,8 +43,13 @@ class App extends React.Component<IProps, IState> {
             owner: "",
             contractAddress: "",
             userSelected: "USER1",
-            balance: 0
+            balance: 0,
+            isTranferAvailable: false,
+            sender: "USER1",
+            recipient: "USER1",
+            amount: 0
         };
+
         this.createUser = this.createUser.bind(this);
         this.addBalance = this.addBalance.bind(this);
         this.updateUserBalance = this.updateUserBalance.bind(this);
@@ -48,6 +57,10 @@ class App extends React.Component<IProps, IState> {
         this.addBalanceEvent = this.addBalanceEvent.bind(this);
         this.handleSelectChange = this.handleSelectChange.bind(this);
         this.handleAddChange = this.handleAddChange.bind(this);
+        this.handleSenderChange = this.handleSenderChange.bind(this);
+        this.handleRecipientChange = this.handleRecipientChange.bind(this);
+        this.handleAmountChange = this.handleAmountChange.bind(this);
+        this.transferEvent = this.transferEvent.bind(this);
     }
 
     componentDidMount(): Promise<void> {
@@ -106,7 +119,7 @@ class App extends React.Component<IProps, IState> {
             .then(() => {
                 return this.updateUserBalance(sender);
             }).then(() => {
-                return this.updateUserBalance(sender);
+                return this.updateUserBalance(recipient);
             }).catch((error: Error) => {
                 console.log("Error in transfer: ", error);
             })
@@ -122,7 +135,7 @@ class App extends React.Component<IProps, IState> {
                 console.log("The initial value is ", userId);
                 user.balance = parseInt(res) / MULTIPLIER;
                 users.set(userId, user);
-                this.setState({ users: users });
+                this.setState({ users: users, isTranferAvailable: true });
             }).catch((error: Error) => {
                 console.log("Error in updating the user balance: ", error);
             });
@@ -136,12 +149,39 @@ class App extends React.Component<IProps, IState> {
         this.setState({ balance: event.target.value });
     }
 
+    handleSenderChange(event: any) {
+        this.setState({ sender: event.target.value });
+    }
+
+    handleRecipientChange(event: any) {
+        this.setState({ recipient: event.target.value });
+    }
+
+    handleAmountChange(event: any) {
+        this.setState({ amount: event.target.value });
+    }
+
     addBalanceEvent(event: any) {
         const user = this.state.userSelected;
         const balance = this.state.balance;
         if(user && balance > 0) {
             console.log("The user requested to add balance, ", user);
             this.addBalance(user, balance);
+        }
+    }
+
+    transferEvent(event: any) {
+        const sender = this.state.sender;
+        const recipient = this.state.recipient;
+        const amountToTransfer = this.state.amount;
+        if(sender && recipient && amountToTransfer > 0) {
+            if(this.state.users.get(sender)!.balance >= amountToTransfer) {
+                this.transfer(sender, recipient, amountToTransfer);
+            } else {
+                console.log("The requested amount to trasnfer is bigger than the user owns");
+            }
+        } else {
+            console.log("Not able to make the transfer, missing");
         }
     }
 
@@ -185,6 +225,7 @@ class App extends React.Component<IProps, IState> {
         const users = this.state.usersId;
         const usersData = this.state.users;
         const numberOfUsers = users.length;
+        const isTranferAvailable = this.state.isTranferAvailable;
 
         return (
             <div className="app-container">
@@ -227,9 +268,40 @@ class App extends React.Component<IProps, IState> {
                             <button className="btn" onClick={this.addBalanceEvent}>ADD BALANCE</button>
                         </div>
                     </div>
-                    
                     }
 
+                    {isTranferAvailable &&
+                        <div>
+                            <h1>TRANSFER</h1>
+
+                            <h2>Sender</h2>
+                            <div className="select-container">
+                                <select onChange={this.handleSenderChange} className="custom-select">
+                                    {users.map((userName: string) => {
+                                        return <option value={userName}> {userName} </option>
+                                    })}
+                                </select>
+                            </div>
+
+                            <h2>Recipient</h2>
+                            <div className="select-container">
+                                <select onChange={this.handleRecipientChange} className="custom-select">
+                                    {users.map((userName: string) => {
+                                        return <option value={userName}> {userName} </option>
+                                    })}
+                                </select>
+                            </div>
+
+                            <div className="amount-container">
+                                <label htmlFor="">Amount to transfer: </label>
+                                <input type="number" min="0" name="amount" value={this.state.amount} onChange={this.handleAmountChange}/>
+                            </div>
+
+                            <button className="btn" onClick={this.transferEvent}>TRANSFER</button>
+
+
+                        </div>
+                    }
 
 
 
