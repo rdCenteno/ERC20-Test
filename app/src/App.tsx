@@ -8,7 +8,6 @@ import Tx from "ethereumjs-tx";
 const USER_NAME = "USER";
 const MULTIPLIER = 1000000000000000000;
 
-
 interface IProps {
 }
 
@@ -19,6 +18,8 @@ interface IState {
     contract: any;
     owner: string;
     contractAddress: string;
+    userSelected: string;
+    balance: number;
 }
 
 interface User {
@@ -36,12 +37,17 @@ class App extends React.Component<IProps, IState> {
             web3: new Web3(),
             contract: "",
             owner: "",
-            contractAddress: ""
+            contractAddress: "",
+            userSelected: "USER1",
+            balance: 0
         };
         this.createUser = this.createUser.bind(this);
         this.addBalance = this.addBalance.bind(this);
         this.updateUserBalance = this.updateUserBalance.bind(this);
         this.transfer = this.transfer.bind(this);
+        this.addBalanceEvent = this.addBalanceEvent.bind(this);
+        this.handleSelectChange = this.handleSelectChange.bind(this);
+        this.handleAddChange = this.handleAddChange.bind(this);
     }
 
     componentDidMount(): Promise<void> {
@@ -122,6 +128,23 @@ class App extends React.Component<IProps, IState> {
             });
     }
 
+    handleSelectChange(event: any) {
+        this.setState({ userSelected: event.target.value });
+    }
+
+    handleAddChange(event: any) {
+        this.setState({ balance: event.target.value });
+    }
+
+    addBalanceEvent(event: any) {
+        const user = this.state.userSelected;
+        const balance = this.state.balance;
+        if(user && balance > 0) {
+            console.log("The user requested to add balance, ", user);
+            this.addBalance(user, balance);
+        }
+    }
+
     getWeb3(): Web3 {
         return new Web3(AppConfig.URL_NODE);
     }
@@ -174,18 +197,40 @@ class App extends React.Component<IProps, IState> {
                     </div>
                     }
 
-
                     {numberOfUsers > 0 &&
-                    <div className="list-container">
-                        <h2>List of Users: </h2>
-                        <React.Fragment>
-                            <ul>
-                                {users.map((userName: string) => {
-                                    return <li key={userName}> {userName}: {usersData.get(userName)!.balance} </li>
-                                })}
-                            </ul>
-                        </React.Fragment>
-                    </div>}
+                    <div className="users-container">
+
+                        <div className="list-container">
+                            <h2>List of Users</h2>
+                            <React.Fragment>
+                                <ul>
+                                    {users.map((userName: string) => {
+                                        return <li key={userName}> {userName}: {usersData.get(userName)!.balance} </li>
+                                    })}
+                                </ul>
+                            </React.Fragment>
+                        </div>
+
+                        <div className="balance-container">
+                            <h2>ADD BALANCE TO USER</h2>
+                            <div>
+                                <label htmlFor="">Add Balance: </label>
+                                <input type="number" min="0" name="balanceToAdd" value={this.state.balance} onChange={this.handleAddChange}/>
+                            </div>
+                            <div className="select-container">
+                                <select value={this.state.userSelected} onChange={this.handleSelectChange} className="custom-select">
+                                    {users.map((userName: string) => {
+                                        return <option value={userName}> {userName} </option>
+                                    })}
+                                </select>
+                            </div>
+                            <button className="btn" onClick={this.addBalanceEvent}>ADD BALANCE</button>
+                        </div>
+                    </div>
+                    
+                    }
+
+
 
 
                 </div>

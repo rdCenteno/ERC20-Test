@@ -24,6 +24,11 @@
   margin: 50px auto;
 }
 
+.select-container {
+  width: 40%;
+  margin: 15px auto;
+}
+
 ul {
   list-style-type: none;
   margin: 0;
@@ -39,3 +44,12 @@ li:last-child {
   border: none;
 }
 
+.custom-select {
+  font-size: 16px;
+  font-family: sans-serif;
+  font-weight: 700;
+  color: #444;
+  width: 100%;
+  box-sizing: border-box;
+  height: 900px;
+}
