@@ -3,34 +3,11 @@ import "./App.css";
 import { AppConfig } from "./app.config";
 import { default as Web3 } from "web3";
 import axios from "axios";
-import { Web3Service } from "./services/web3.service"
+import { Web3Service } from "./services/web3.service";
+import { IProps, IState, User} from "./model/app.model";
 
 const USER_NAME = "USER";
 const MULTIPLIER = 1000000000000000000;
-
-interface IProps {
-}
-
-interface IState {
-    users: Map<string, User>;
-    usersId: Array<string>;
-    web3: Web3;
-    contract: any;
-    owner: string;
-    contractAddress: string;
-    userSelected: string;
-    balance: number;
-    isTranferAvailable: boolean,
-    sender: string,
-    recipient: string,
-    amount: number,
-    web3Service: Web3Service
-}
-
-interface User {
-    account: any;
-    balance: number;
-}
 
 class App extends React.Component<IProps, IState> {
 
