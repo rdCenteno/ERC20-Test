@@ -3,7 +3,7 @@ import "./App.css";
 import { AppConfig } from "./app.config";
 import { default as Web3 } from "web3";
 import axios from "axios";
-import Tx from "ethereumjs-tx";
+import { Web3Service } from "./services/web3.service"
 
 const USER_NAME = "USER";
 const MULTIPLIER = 1000000000000000000;
@@ -23,7 +23,8 @@ interface IState {
     isTranferAvailable: boolean,
     sender: string,
     recipient: string,
-    amount: number
+    amount: number,
+    web3Service: Web3Service
 }
 
 interface User {
@@ -47,7 +48,8 @@ class App extends React.Component<IProps, IState> {
             isTranferAvailable: false,
             sender: "USER1",
             recipient: "USER1",
-            amount: 0
+            amount: 0,
+            web3Service: new Web3Service()
         };
 
         this.createUser = this.createUser.bind(this);
@@ -64,7 +66,8 @@ class App extends React.Component<IProps, IState> {
     }
 
     componentDidMount(): Promise<void> {
-        const web3 = this.getWeb3();
+        const web3Service = new Web3Service();
+        const web3 = web3Service.getWeb3();
         let contract: any;
         let contractAddress: string;
         return axios({ url: AppConfig.CONTRACT_NAME, method: "GET", responseType: "json" })
@@ -76,7 +79,7 @@ class App extends React.Component<IProps, IState> {
                 return web3.eth.getAccounts();
             }).then(accounts => {
                 const owner = accounts[0];
-                this.setState({ contract: contract, owner: owner, contractAddress: contractAddress, web3: web3 });
+                this.setState({ contract: contract, owner: owner, contractAddress: contractAddress, web3: web3, web3Service: web3Service });
             })
     }
 
@@ -115,7 +118,7 @@ class App extends React.Component<IProps, IState> {
         const recipientAddress = this.state.users.get(recipient)!.account.address;
         const weiAmount = web3.utils.toWei(amount.toString(), "ether");
         const encodeAbi = contract.methods.transfer(recipientAddress, weiAmount).encodeABI();
-        return this.singTx(sender, encodeAbi)
+        return this.state.web3Service.singTx(this.state.users.get(sender)!.account, this.state.contractAddress, encodeAbi)
             .then(() => {
                 return this.updateUserBalance(sender);
             }).then(() => {
@@ -183,42 +186,6 @@ class App extends React.Component<IProps, IState> {
         } else {
             console.log("Not able to make the transfer, missing");
         }
-    }
-
-    getWeb3(): Web3 {
-        return new Web3(AppConfig.URL_NODE);
-    }
-
-    singTx(userId: string, encodeAbi: string): Promise<any> {
-        const web3 = this.state.web3;
-        const user = this.state.users.get(userId)!.account;
-        const contractAddress = this.state.contractAddress;
-        return web3.eth.getTransactionCount(user.address, "pending")
-            .then(nonceValue => {
-                const nonce = "0x" + (nonceValue).toString(16);
-                const rawtx = {
-                    from: user.address,
-                    nonce: nonce,
-                    gasPrice: 0,
-                    gasLimit: 6721975,
-                    to: contractAddress,
-                    data: encodeAbi
-                };
-                const tx = new Tx(rawtx);
-                let priv = user.privateKey.substring(2);
-                let privateKey = Buffer.from(priv, "hex");
-                tx.sign(privateKey);
-
-                let raw = "0x" + tx.serialize().toString("hex");
-                return web3.eth.sendSignedTransaction(raw);
-            }).then(transactionReceipt => {
-                console.log("Transaction Receipt: ", transactionReceipt);
-                return transactionReceipt;
-            }).catch(e => {
-                console.log("Error in sendTx: ", e);
-                return null;
-            });
-
     }
 
     render() {
