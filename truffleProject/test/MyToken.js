@@ -1,8 +1,10 @@
 const { constants, expectEvent, expectRevert } = require("@openzeppelin/test-helpers");
+const { web3 } = require("@openzeppelin/test-helpers/src/setup");
 const { ZERO_ADDRESS } = constants;
 
 const MyToken = artifacts.require("./MyToken.sol");
 
+const INITIAL_BALANCE = 20;
 
 contract("MyToken test", async accounts => {
 
@@ -21,7 +23,7 @@ contract("MyToken test", async accounts => {
     describe("add balance to user", () => {
 
         it("add balance", async () => {
-            const { logs } = await myToken.addBalanceToUser(other, { from: owner });
+            const { logs } = await myToken.addBalanceToUser(other, INITIAL_BALANCE, { from: owner });
             const userBalance = await myToken.balanceOf(other);
 
             const event = expectEvent.inLogs(logs, "Transfer", {
@@ -34,11 +36,20 @@ contract("MyToken test", async accounts => {
 
         it("creates a", async () => {
             await expectRevert(
-                myToken.addBalanceToUser(owner, { from: other }),
+                myToken.addBalanceToUser(owner, INITIAL_BALANCE, { from: other }),
                 "Ownable: caller is not the owner",
             );
         });
 
+    });
+
+    describe("creates a new account and add initial balance", () => {
+        it("creates a new account", async () => {
+            const sender = web3.eth.accounts.create(web3.utils.randomHex(32));
+            await myToken.addBalanceToUser(sender.address, INITIAL_BALANCE, { from: owner });
+            const userBalance = await myToken.balanceOf(sender.address);
+            assert.equal(web3.utils.toWei(INITIAL_BALANCE.toString(), "ether"), userBalance.toString(), "The expected balance is wrong");
+        });
     });
 
 });
