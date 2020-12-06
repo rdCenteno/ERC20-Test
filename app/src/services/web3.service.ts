@@ -8,7 +8,33 @@ export class Web3Service {
         return new Web3(AppConfig.URL_NODE);
     }
 
-    singTx(user: any, contractAddress: string, encodeAbi: string): Promise<any> {
+    public getContractInstance(contractAbi: any, contractAddress: string): any {
+        const web3 = this.getWeb3();
+        return new web3.eth.Contract(contractAbi, contractAddress);
+    }
+
+    public createAccount(): any {
+        const web3 = this.getWeb3();
+        return web3.eth.accounts.create(web3.utils.randomHex(32));
+    }
+
+    public getOwner(): Promise<string> {
+        const web3 = this.getWeb3();
+        return web3.eth.getAccounts().then(accounts => accounts[0]);
+    }
+
+    public numberToWei(amount: number): string {
+        const web3 = this.getWeb3();
+        return web3.utils.toWei(amount.toString(), "ether");
+    }
+
+    public weiToNumber(amount: string): number {
+        const web3 = this.getWeb3();
+        const wei = web3.utils.fromWei(amount.toString(), "ether");
+        return parseInt(wei);
+    }
+
+    public singTx(user: any, contractAddress: string, encodeAbi: string): Promise<any> {
         const web3 = this.getWeb3();
         return web3.eth.getTransactionCount(user.address, "pending")
         .then(nonceValue => {

@@ -1,13 +1,11 @@
 import React from "react";
 import "./App.css";
 import { AppConfig } from "./app.config";
-import { default as Web3 } from "web3";
 import axios from "axios";
 import { Web3Service } from "./services/web3.service";
 import { IProps, IState, User} from "./model/app.model";
 
 const USER_NAME = "USER";
-const MULTIPLIER = 1000000000000000000;
 
 class App extends React.Component<IProps, IState> {
 
@@ -16,7 +14,6 @@ class App extends React.Component<IProps, IState> {
         this.state = {
             users: new Map<string, User>(),
             usersId: new Array<string>(),
-            web3: new Web3(),
             contract: "",
             owner: "",
             contractAddress: "",
@@ -44,30 +41,28 @@ class App extends React.Component<IProps, IState> {
 
     componentDidMount(): Promise<void> {
         const web3Service = new Web3Service();
-        const web3 = web3Service.getWeb3();
         let contract: any;
         let contractAddress: string;
         return axios({ url: AppConfig.CONTRACT_NAME, method: "GET", responseType: "json" })
             .then(response => {
                 const contractAbi = response.data.abi;
                 contractAddress = response.data.networks[AppConfig.NET_ID].address;
-                contract = new web3.eth.Contract(contractAbi, contractAddress);
+                contract = web3Service.getContractInstance(contractAbi, contractAddress);
                 console.log("The contract instance is initilized", contract);
-                return web3.eth.getAccounts();
-            }).then(accounts => {
-                const owner = accounts[0];
-                this.setState({ contract: contract, owner: owner, contractAddress: contractAddress, web3: web3, web3Service: web3Service });
+                return web3Service.getOwner();
+            }).then((ownerAddress: string) => {
+                this.setState({ contract: contract, owner: ownerAddress, contractAddress: contractAddress, web3Service: web3Service });
             })
     }
 
     createUser() {
-        const web3 = this.state.web3;
+        const web3Service = this.state.web3Service;
         let usersId = this.state.usersId;
         let users = this.state.users;
         const userId = usersId.length + 1;
         const newUserId = USER_NAME + userId;
         console.log("Creating new user", newUserId);
-        const newAccount = web3.eth.accounts.create(web3.utils.randomHex(32));
+        const newAccount = web3Service.createAccount();
         const newUser: User = { account: newAccount, balance: 0 };
         console.log("The new user address is: ", newAccount.address);
         users.set(newUserId, newUser);
@@ -77,10 +72,10 @@ class App extends React.Component<IProps, IState> {
 
     addBalance(userId: string, balance: number): Promise<void> {
         const contract = this.state.contract;
-        const web3 = this.state.web3;
+        const web3Service = this.state.web3Service;
         const userAddress = this.state.users.get(userId)!.account.address;
-        return web3.eth.getAccounts().then(accounts => {
-            const owner = accounts[0];
+        return web3Service.getOwner().then((ownerAddress: string) => {
+            const owner = ownerAddress;
             return contract.methods.addBalanceToUser(userAddress, balance).send({ from: owner });
         }).then(() => {
             return this.updateUserBalance(userId);
@@ -90,12 +85,11 @@ class App extends React.Component<IProps, IState> {
     }
 
     transfer(sender: string, recipient: string, amount: number) {
-        const web3 = this.state.web3;
+        const web3Service = this.state.web3Service;
         const contract = this.state.contract;
         const recipientAddress = this.state.users.get(recipient)!.account.address;
-        const weiAmount = web3.utils.toWei(amount.toString(), "ether");
-        const encodeAbi = contract.methods.transfer(recipientAddress, weiAmount).encodeABI();
-        return this.state.web3Service.singTx(this.state.users.get(sender)!.account, this.state.contractAddress, encodeAbi)
+        const encodeAbi = contract.methods.transfer(recipientAddress, web3Service.numberToWei(amount)).encodeABI();
+        return web3Service.singTx(this.state.users.get(sender)!.account, this.state.contractAddress, encodeAbi)
             .then(() => {
                 return this.updateUserBalance(sender);
             }).then(() => {
@@ -103,17 +97,17 @@ class App extends React.Component<IProps, IState> {
             }).catch((error: Error) => {
                 console.log("Error in transfer: ", error);
             })
-
     }
 
     updateUserBalance(userId: string): Promise<void> {
+        const web3Service = this.state.web3Service;
         let users = this.state.users;
         let user = users.get(userId)!;
         const contract = this.state.contract;
         return contract.methods.balanceOf(user.account.address).call()
             .then((res: string) => {
-                console.log("The initial value is ", userId);
-                user.balance = parseInt(res) / MULTIPLIER;
+                console.log("Updating user balance: ", userId);
+                user.balance = web3Service.weiToNumber(res);
                 users.set(userId, user);
                 this.setState({ users: users, isTranferAvailable: true });
             }).catch((error: Error) => {
