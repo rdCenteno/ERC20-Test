@@ -5,9 +5,9 @@
   "author": "Ronny Demera",
   "license": "MIT",
   "scripts": {
-    "postinstall": "cd truffleProject && yarn install && cd ../app && yarn install",
+    "postinstall": "cd truffle-project && yarn install && cd ../app && yarn install",
     "start": "yarn start:truffleProject; yarn start:app",
-    "start:truffleProject": "cd ./truffleProject; yarn start",
+    "start:truffleProject": "cd ./truffle-project; yarn start",
     "start:app": "cd ./app; yarn start"
   }
 }
